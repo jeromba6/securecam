@@ -7,31 +7,79 @@ import flask  # Flask web framework
 import datetime  # For date and time handling
 import sys  # For sys.argv (ensure this is only imported once)
 import pytz  # For timezone handling
+import argparse  # For command-line argument parsing
 
 # Path to the directory containing all camera subdirectories
-cams_directory = "/home/jvgemert/sshfs/data2/securecam/"
+cams_directory: str               = ""
+cams_prefix: str                  = ""
+cams_images_extentions: list[str] = []
+cams_videos_extentions: list[str] = []
+debug: bool                       = False
+port: int                         = 5000
+
 app = flask.Flask(__name__)
 
-# Parse command-line arguments for cams_directory
-if len(sys.argv) > 1:
-    cams_directory = sys.argv[1]
-else:
-    cams_directory = os.environ.get("SECURECAM_DIR", "/home/jvgemert/sshfs/data2/securecam/")
-
 # Simple cache for camera data to avoid frequent disk reads
-camera_data_cache = None
-camera_data_cache_time = 0
-CACHE_TTL = 300  # Cache time-to-live in seconds
+camera_data_cache: dict[str, dict] = None
+camera_data_cache_time: float = 0
+CACHE_TTL: int = 300  # Cache time-to-live in seconds
 
 # Define CET timezone
 CET = pytz.timezone('CET')
+
+
+def init():
+    """Initialize configuration from command-line arguments or environment variables."""
+    global cams_directory, cams_prefix, cams_images_extentions, cams_videos_extentions, debug, port
+    parser = argparse.ArgumentParser(description="SecureCam Web Interface")
+    parser.add_argument(
+        '-d', '--dir', 
+        type=str, 
+        default=os.environ.get("SECURECAM_DIR", "/cameras/"), 
+        help='Directory containing camera subdirectories')
+    parser.add_argument(
+        '-p','--prefix',
+        type=str,
+        default=os.environ.get("SECURECAM_PREFIX", "cam"),
+        help='Prefix for camera directories')
+    parser.add_argument(
+        '-i', '--images-extensions',
+        type=str,
+        nargs='+',
+        default=['.jpg', '.jpeg', '.png'],
+        help='List of image file extensions')
+    parser.add_argument(
+        '-v', '--videos-extensions',
+        type=str,
+        nargs='+',
+        default=['.mp4', '.mkv'],
+        help='List of video file extensions')
+    parser.add_argument(
+        '-D', '--debug',
+        action='store_true',
+        default=False,
+        help='Enable debug mode')
+    parser.add_argument(
+        '-P', '--port',
+        type=int,
+        default=int(os.environ.get("SECURECAM_PORT", "5000")),
+        help='Port to run the web server on')
+    args = parser.parse_args()
+
+    cams_directory         = args.dir
+    cams_prefix            = args.prefix
+    cams_images_extentions = args.images_extensions
+    cams_videos_extentions = args.videos_extensions
+    debug                  = args.debug
+    port                   = args.port
+
 
 def get_all_camera_data():
     """
     Collects and caches data for all cameras.
     Returns a dictionary mapping camera names to their data.
     """
-    global camera_data_cache, camera_data_cache_time
+    global cams_directory, cams_prefix, camera_data_cache, camera_data_cache_time
     now = datetime.datetime.now().timestamp()
     # Use cached data if still valid
     if camera_data_cache is not None and now - camera_data_cache_time < CACHE_TTL:
@@ -39,17 +87,13 @@ def get_all_camera_data():
     camera_data = {}
     # Scan all camera directories
     for cam in os.listdir(cams_directory):
-        if not cam.startswith("cam"):
+        if not cam.startswith(cams_prefix):
             continue
         camera_data[cam] = get_camera_data(cam)
     camera_data_cache = camera_data
     camera_data_cache_time = now
     return camera_data
 
-
-def main():
-    # Placeholder for CLI/debug code
-    pass
 
 # Home page: lists all available cameras
 @app.route('/')
@@ -362,10 +406,10 @@ def get_camera_data(cam):
             mtime_utc = datetime.datetime.fromtimestamp(os.path.getmtime(full_path), datetime.timezone.utc)
             mtime_cet = mtime_utc.astimezone(CET)
             timestamp = int(mtime_cet.timestamp())
-            if file.endswith(".jpg"):
+            if is_extension_in_list(file, cams_images_extentions):
                 photo_files[timestamp] = rel_path
                 continue
-            elif file.endswith(".mp4") or file.endswith(".mkv"):
+            elif is_extension_in_list(file, cams_videos_extentions):
                 video_files[timestamp] = rel_path
                 continue
     # Precompute date groupings and sorted lists
@@ -393,6 +437,12 @@ def get_camera_data(cam):
         "photo_dates": photo_dates,
     }
 
+
+def is_extension_in_list(filename, extensions):
+    """Check if the file has one of the specified extensions."""
+    return any(filename.lower().endswith(ext.lower()) for ext in extensions)
+
+
 def get_sorted_files_by_date(data, key):
     files = [(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d'), ts, data[key][ts]) for ts in data[key]]
     return sorted(files)
@@ -406,4 +456,5 @@ def format_cet(ts):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    init()
+    app.run(host='0.0.0.0', port=port, debug=debug)
