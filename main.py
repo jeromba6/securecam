@@ -487,9 +487,13 @@ def serve_media(cam_name, filename):
     if not os.path.exists(abs_media_path):
         return "File not found", 404
 
-    # Serve .jpg and .mp4 directly
-    if abs_media_path.endswith('.jpg') or abs_media_path.endswith('.mp4'):
-        return flask.send_file(abs_media_path)
+    # Serve images and .mp4 directly
+    ext = os.path.splitext(abs_media_path)[1].lower()
+    if ext in ['.jpg', '.jpeg', '.png']:
+        mimetype = 'image/jpeg' if ext in ['.jpg', '.jpeg'] else 'image/png'
+        return flask.send_file(abs_media_path, mimetype=mimetype)
+    elif ext == '.mp4':
+        return flask.send_file(abs_media_path, mimetype='video/mp4')
     # Transcode .mkv to .mp4 on the fly
     elif abs_media_path.endswith('.mkv'):
         import subprocess
