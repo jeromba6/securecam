@@ -62,7 +62,7 @@ def init():
     parser.add_argument(
         '-P', '--port',
         type=int,
-        default=int(os.environ.get("SECURECAM_PORT", "5000")),
+        default=5000,
         help='Port to run the web server on')
     args = parser.parse_args()
 
