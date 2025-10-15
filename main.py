@@ -225,9 +225,9 @@ def camera_videos_files(cam_name, date):
     if not cam_name.startswith("cam"):
         return "Invalid camera name", 404
     data = get_all_camera_data()[cam_name]
-        files = sorted([(ts, data['videos'][ts]) for ts in data['videos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
-        files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
-        return f"""
+    files = sorted([(ts, data['videos'][ts]) for ts in data['videos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
+    files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -303,9 +303,9 @@ def camera_photos_files(cam_name, date):
     if not cam_name.startswith("cam"):
         return "Invalid camera name", 404
     data = get_all_camera_data()[cam_name]
-        files = sorted([(ts, data['photos'][ts]) for ts in data['photos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
-        files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
-        return f"""
+    files = sorted([(ts, data['photos'][ts]) for ts in data['photos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
+    files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -486,7 +486,7 @@ def serve_media(cam_name, filename):
         return "Invalid file path", 404
     if not os.path.exists(abs_media_path):
         return "File not found", 404
-    
+
     # Serve .jpg and .mp4 directly
     if abs_media_path.endswith('.jpg') or abs_media_path.endswith('.mp4'):
         return flask.send_file(abs_media_path)
