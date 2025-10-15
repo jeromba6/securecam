@@ -372,8 +372,8 @@ def camera_video_viewer(cam_name, date, file_idx):
         photo_link = f"<div style='margin-top:1em;'><a href='/camera/{cam_name}/photos/{nearest_photo_date}/{photo_idx}'>Go to nearest photo</a></div>"
     else:
         photo_link = ""
-        date_str, time_str = format_cet(ts)
-        return f"""
+    date_str, time_str = format_cet(ts)
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -441,8 +441,8 @@ def camera_photo_viewer(cam_name, date, file_idx):
         video_link = f"<div style='margin-top:1em;'><a href='/camera/{cam_name}/videos/{nearest_video_date}/{video_idx}'>Go to nearest video</a></div>"
     else:
         video_link = ""
-        date_str, time_str = format_cet(ts)
-        return f"""
+    date_str, time_str = format_cet(ts)
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
