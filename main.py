@@ -98,17 +98,34 @@ def get_all_camera_data():
 # Home page: lists all available cameras
 @app.route('/')
 def index():
-    cameras = sorted([cam for cam in get_all_camera_data().keys()])
-    camera_list_html = "<ul>" + "".join(f'<li><a href="/camera/{cam}">{cam}</a></li>' for cam in cameras) + "</ul>"
-    return f"""
-    <html>
-        <head><title>Available Cameras</title></head>
-        <body>
-            <h1>Available Cameras</h1>
-            {camera_list_html}
-        </body>
-    </html>
-    """
+        cameras = sorted([cam for cam in get_all_camera_data().keys()])
+        camera_list_html = "<ul>" + "".join(f'<li><a href="/camera/{cam}">{cam}</a></li>' for cam in cameras) + "</ul>"
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>Available Cameras</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.7em; margin-bottom: 0.7em; }}
+            ul {{ padding: 0; list-style: none; }}
+            li {{ margin: 0.7em 0; }}
+            a {{ color: #1565c0; text-decoration: none; font-size: 1.2em; }}
+            a:hover {{ text-decoration: underline; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1.2em; }}
+                a {{ font-size: 1em; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>Available Cameras</h1>
+        {camera_list_html}
+    </body>
+</html>
+        """
 
 # Camera details page: shows stats and available dates
 @app.route('/camera/<cam_name>')
@@ -124,23 +141,42 @@ def camera_detail(cam_name):
     for ts in list(data['videos'].keys()) + list(data['photos'].keys()):
         date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         date_counts[date] = date_counts.get(date, 0) + 1
-    dates = sorted(date_counts.keys())
-    dates_html = "<ul>" + "".join(f"<li>{date} ({date_counts[date]})</li>" for date in dates) + "</ul>"
-    num_videos = len(data['videos'])
-    num_photos = len(data['photos'])
-    return f"""
-    <html>
-        <head><title>{cam_name} Details</title></head>
-        <body>
-            <a href='/'>Back to camera list</a>
-            <h1>{cam_name}</h1>
-            <p>Videos: <a href='/camera/{cam_name}/videos'>{num_videos}</a></p>
-            <p>Photos: <a href='/camera/{cam_name}/photos'>{num_photos}</a></p>
-            <h2>Available Dates</h2>
-            {dates_html}
-        </body>
-    </html>
-    """
+        dates = sorted(date_counts.keys())
+        dates_html = "<ul>" + "".join(f"<li>{date} ({date_counts[date]})</li>" for date in dates) + "</ul>"
+        num_videos = len(data['videos'])
+        num_photos = len(data['photos'])
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{cam_name} Details</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.5em; margin-bottom: 0.5em; }}
+            h2 {{ font-size: 1.1em; margin-top: 1.5em; }}
+            ul {{ padding: 0; list-style: none; }}
+            li {{ margin: 0.5em 0; }}
+            a {{ color: #1565c0; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            p {{ margin: 0.5em 0; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1.1em; }}
+                h2 {{ font-size: 1em; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <a href='/'>Back to camera list</a>
+        <h1>{cam_name}</h1>
+        <p>Videos: <a href='/camera/{cam_name}/videos'>{num_videos}</a></p>
+        <p>Photos: <a href='/camera/{cam_name}/photos'>{num_photos}</a></p>
+        <h2>Available Dates</h2>
+        {dates_html}
+    </body>
+</html>
+        """
 
 # Video date list: shows all dates with videos for a camera
 @app.route('/camera/<cam_name>/videos')
@@ -153,19 +189,35 @@ def camera_videos_dates(cam_name):
     for ts in data['videos']:
         date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         date_counts[date] = date_counts.get(date, 0) + 1
-    video_dates = sorted(date_counts.keys())
-    dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in video_dates) + "</ul>"
-    return f"""
-    <html>
-        <head><title>{cam_name} Video Dates</title></head>
-        <body>
-            <a href='/camera/{cam_name}'>Back to camera details</a>
-            <a href='/'>Back to camera list</a>
-            <h1>{cam_name} - Video Dates</h1>
-            {dates_html}
-        </body>
-    </html>
-    """
+        video_dates = sorted(date_counts.keys())
+        dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in video_dates) + "</ul>"
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{cam_name} Video Dates</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.3em; margin-bottom: 0.7em; }}
+            ul {{ padding: 0; list-style: none; }}
+            li {{ margin: 0.5em 0; }}
+            a {{ color: #1565c0; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1em; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <a href='/camera/{cam_name}'>Back to camera details</a>
+        <a href='/'>Back to camera list</a>
+        <h1>{cam_name} - Video Dates</h1>
+        {dates_html}
+    </body>
+</html>
+        """
 
 # Video file list for a specific date
 @app.route('/camera/<cam_name>/videos/<date>')
@@ -173,20 +225,36 @@ def camera_videos_files(cam_name, date):
     if not cam_name.startswith("cam"):
         return "Invalid camera name", 404
     data = get_all_camera_data()[cam_name]
-    files = sorted([(ts, data['videos'][ts]) for ts in data['videos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
-    files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
-    return f"""
-    <html>
-        <head><title>{cam_name} Videos on {date}</title></head>
-        <body>
-            <a href='/camera/{cam_name}/videos'>Back to video dates</a>
-            <a href='/camera/{cam_name}'>Back to camera details</a>
-            <a href='/'>Back to camera list</a>
-            <h1>{cam_name} - Videos on {date}</h1>
-            {files_html}
-        </body>
-    </html>
-    """
+        files = sorted([(ts, data['videos'][ts]) for ts in data['videos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
+        files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{cam_name} Videos on {date}</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.2em; margin-bottom: 0.7em; }}
+            ul {{ padding: 0; list-style: none; }}
+            li {{ margin: 0.5em 0; }}
+            a {{ color: #1565c0; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1em; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <a href='/camera/{cam_name}/videos'>Back to video dates</a>
+        <a href='/camera/{cam_name}'>Back to camera details</a>
+        <a href='/'>Back to camera list</a>
+        <h1>{cam_name} - Videos on {date}</h1>
+        {files_html}
+    </body>
+</html>
+        """
 
 # Photo date list: shows all dates with photos for a camera
 @app.route('/camera/<cam_name>/photos')
@@ -199,19 +267,35 @@ def camera_photos_dates(cam_name):
     for ts in data['photos']:
         date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         date_counts[date] = date_counts.get(date, 0) + 1
-    photo_dates = sorted(date_counts.keys())
-    dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in photo_dates) + "</ul>"
-    return f"""
-    <html>
-        <head><title>{cam_name} Photo Dates</title></head>
-        <body>
-            <a href='/camera/{cam_name}'>Back to camera details</a>
-            <a href='/'>Back to camera list</a>
-            <h1>{cam_name} - Photo Dates</h1>
-            {dates_html}
-        </body>
-    </html>
-    """
+        photo_dates = sorted(date_counts.keys())
+        dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in photo_dates) + "</ul>"
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{cam_name} Photo Dates</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.3em; margin-bottom: 0.7em; }}
+            ul {{ padding: 0; list-style: none; }}
+            li {{ margin: 0.5em 0; }}
+            a {{ color: #1565c0; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1em; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <a href='/camera/{cam_name}'>Back to camera details</a>
+        <a href='/'>Back to camera list</a>
+        <h1>{cam_name} - Photo Dates</h1>
+        {dates_html}
+    </body>
+</html>
+        """
 
 # Photo file list for a specific date
 @app.route('/camera/<cam_name>/photos/<date>')
@@ -219,20 +303,36 @@ def camera_photos_files(cam_name, date):
     if not cam_name.startswith("cam"):
         return "Invalid camera name", 404
     data = get_all_camera_data()[cam_name]
-    files = sorted([(ts, data['photos'][ts]) for ts in data['photos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
-    files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
-    return f"""
-    <html>
-        <head><title>{cam_name} Photos on {date}</title></head>
-        <body>
-            <a href='/camera/{cam_name}/photos'>Back to photo dates</a>
-            <a href='/camera/{cam_name}'>Back to camera details</a>
-            <a href='/'>Back to camera list</a>
-            <h1>{cam_name} - Photos on {date}</h1>
-            {files_html}
-        </body>
-    </html>
-    """
+        files = sorted([(ts, data['photos'][ts]) for ts in data['photos'] if datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') == date])
+        files_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}/{idx}'>{datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')}</a></li>" for idx, (ts, file) in enumerate(files)) + "</ul>"
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{cam_name} Photos on {date}</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.2em; margin-bottom: 0.7em; }}
+            ul {{ padding: 0; list-style: none; }}
+            li {{ margin: 0.5em 0; }}
+            a {{ color: #1565c0; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1em; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <a href='/camera/{cam_name}/photos'>Back to photo dates</a>
+        <a href='/camera/{cam_name}'>Back to camera details</a>
+        <a href='/'>Back to camera list</a>
+        <h1>{cam_name} - Photos on {date}</h1>
+        {files_html}
+    </body>
+</html>
+        """
 
 
 @app.route('/camera/<cam_name>/videos/<date>/<int:file_idx>')
@@ -272,19 +372,36 @@ def camera_video_viewer(cam_name, date, file_idx):
         photo_link = f"<div style='margin-top:1em;'><a href='/camera/{cam_name}/photos/{nearest_photo_date}/{photo_idx}'>Go to nearest photo</a></div>"
     else:
         photo_link = ""
-    date_str, time_str = format_cet(ts)
-    return f"""
-    <html>
-        <head><title>{cam_name} Video {file}</title></head>
-        <body>
-            <h1>{cam_name} - {date_str} - {time_str}</h1>
-            <video width='640' controls src='{video_url}'></video><br>
-            <div style='margin:1em 0;'>{prev_link} {next_link}</div>
-            {photo_link}
-            <a href='/camera/{cam_name}/videos/{date}'>Back to file list</a>
-        </body>
-    </html>
-    """
+        date_str, time_str = format_cet(ts)
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{cam_name} Video {file}</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.1em; margin-bottom: 0.7em; }}
+            video {{ width: 100%; max-width: 640px; height: auto; display: block; margin: 0 auto; background: #000; }}
+            div {{ text-align: center; }}
+            a {{ color: #1565c0; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1em; }}
+                video {{ max-width: 100vw; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>{cam_name} - {date_str} - {time_str}</h1>
+        <video controls src='{video_url}'></video><br>
+        <div style='margin:1em 0;'>{prev_link} {next_link}</div>
+        {photo_link}
+        <a href='/camera/{cam_name}/videos/{date}'>Back to file list</a>
+    </body>
+</html>
+        """
 
 
 @app.route('/camera/<cam_name>/photos/<date>/<int:file_idx>')
@@ -324,19 +441,36 @@ def camera_photo_viewer(cam_name, date, file_idx):
         video_link = f"<div style='margin-top:1em;'><a href='/camera/{cam_name}/videos/{nearest_video_date}/{video_idx}'>Go to nearest video</a></div>"
     else:
         video_link = ""
-    date_str, time_str = format_cet(ts)
-    return f"""
-    <html>
-        <head><title>{cam_name} Photo {file}</title></head>
-        <body>
-            <h1>{cam_name} - {date_str} - {time_str}</h1>
-            <img src='{photo_url}' style='max-width:100%;height:auto;'><br>
-            <div style='margin:1em 0;'>{prev_link} {next_link}</div>
-            {video_link}
-            <a href='/camera/{cam_name}/photos/{date}'>Back to file list</a>
-        </body>
-    </html>
-    """
+        date_str, time_str = format_cet(ts)
+        return f"""
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{cam_name} Photo {file}</title>
+        <style>
+            body {{ font-family: system-ui, sans-serif; margin: 0; padding: 1em; background: #f8f9fa; }}
+            h1 {{ font-size: 1.1em; margin-bottom: 0.7em; }}
+            img {{ width: 100%; max-width: 640px; height: auto; display: block; margin: 0 auto; background: #000; }}
+            div {{ text-align: center; }}
+            a {{ color: #1565c0; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            @media (max-width: 600px) {{
+                h1 {{ font-size: 1em; }}
+                img {{ max-width: 100vw; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>{cam_name} - {date_str} - {time_str}</h1>
+        <img src='{photo_url}' alt='Photo'><br>
+        <div style='margin:1em 0;'>{prev_link} {next_link}</div>
+        {video_link}
+        <a href='/camera/{cam_name}/photos/{date}'>Back to file list</a>
+    </body>
+</html>
+        """
 
 
 @app.route('/media/<cam_name>/<path:filename>')
