@@ -476,15 +476,25 @@ def camera_photo_viewer(cam_name, date, file_idx):
 @app.route('/media/<cam_name>/<path:filename>')
 def serve_media(cam_name, filename):
     if not cam_name.startswith("cam"):
+        if debug:
+            print(f"[MEDIA] Invalid camera name: {cam_name}")
         return "Invalid camera name", 404
     safe_filename = os.path.normpath(filename).replace('..', '')
     media_path = os.path.join(cams_directory, cam_name, safe_filename)
-    # Ensure the file is within the camera directory
     abs_media_path = os.path.abspath(media_path)
     abs_cam_dir = os.path.abspath(os.path.join(cams_directory, cam_name))
+    if debug:
+        print(f"[MEDIA] cam_name={cam_name} safe_filename={safe_filename}")
+        print(f"[MEDIA] media_path={media_path}")
+        print(f"[MEDIA] abs_media_path={abs_media_path}")
+        print(f"[MEDIA] abs_cam_dir={abs_cam_dir}")
     if not abs_media_path.startswith(abs_cam_dir):
+        if debug:
+            print(f"[MEDIA] Invalid file path: {abs_media_path} not in {abs_cam_dir}")
         return "Invalid file path", 404
     if not os.path.exists(abs_media_path):
+        if debug:
+            print(f"[MEDIA] File not found: {abs_media_path}")
         return "File not found", 404
 
     # Serve images and .mp4 directly
