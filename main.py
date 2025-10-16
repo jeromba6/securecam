@@ -98,9 +98,9 @@ def get_all_camera_data():
 # Home page: lists all available cameras
 @app.route('/')
 def index():
-        cameras = sorted([cam for cam in get_all_camera_data().keys()])
-        camera_list_html = "<ul>" + "".join(f'<li><a href="/camera/{cam}">{cam}</a></li>' for cam in cameras) + "</ul>"
-        return f"""
+    cameras = sorted([cam for cam in get_all_camera_data().keys()])
+    camera_list_html = "<ul>" + "".join(f'<li><a href="/camera/{cam}">{cam}</a></li>' for cam in cameras) + "</ul>"
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -124,8 +124,7 @@ def index():
         <h1>Available Cameras</h1>
         {camera_list_html}
     </body>
-</html>
-        """
+</html>"""
 
 # Camera details page: shows stats and available dates
 @app.route('/camera/<cam_name>')
@@ -141,11 +140,11 @@ def camera_detail(cam_name):
     for ts in list(data['videos'].keys()) + list(data['photos'].keys()):
         date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         date_counts[date] = date_counts.get(date, 0) + 1
-        dates = sorted(date_counts.keys())
-        dates_html = "<ul>" + "".join(f"<li>{date} ({date_counts[date]})</li>" for date in dates) + "</ul>"
-        num_videos = len(data['videos'])
-        num_photos = len(data['photos'])
-        return f"""
+    dates = sorted(date_counts.keys())
+    dates_html = "<ul>" + "".join(f"<li>{date} ({date_counts[date]})</li>" for date in dates) + "</ul>"
+    num_videos = len(data['videos'])
+    num_photos = len(data['photos'])
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -175,8 +174,7 @@ def camera_detail(cam_name):
         <h2>Available Dates</h2>
         {dates_html}
     </body>
-</html>
-        """
+</html>"""
 
 # Video date list: shows all dates with videos for a camera
 @app.route('/camera/<cam_name>/videos')
@@ -189,9 +187,9 @@ def camera_videos_dates(cam_name):
     for ts in data['videos']:
         date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         date_counts[date] = date_counts.get(date, 0) + 1
-        video_dates = sorted(date_counts.keys())
-        dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in video_dates) + "</ul>"
-        return f"""
+    video_dates = sorted(date_counts.keys())
+    dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/videos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in video_dates) + "</ul>"
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -216,8 +214,7 @@ def camera_videos_dates(cam_name):
         <h1>{cam_name} - Video Dates</h1>
         {dates_html}
     </body>
-</html>
-        """
+</html>"""
 
 # Video file list for a specific date
 @app.route('/camera/<cam_name>/videos/<date>')
@@ -253,8 +250,7 @@ def camera_videos_files(cam_name, date):
         <h1>{cam_name} - Videos on {date}</h1>
         {files_html}
     </body>
-</html>
-        """
+</html>"""
 
 # Photo date list: shows all dates with photos for a camera
 @app.route('/camera/<cam_name>/photos')
@@ -267,9 +263,9 @@ def camera_photos_dates(cam_name):
     for ts in data['photos']:
         date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         date_counts[date] = date_counts.get(date, 0) + 1
-        photo_dates = sorted(date_counts.keys())
-        dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in photo_dates) + "</ul>"
-        return f"""
+    photo_dates = sorted(date_counts.keys())
+    dates_html = "<ul>" + "".join(f"<li><a href='/camera/{cam_name}/photos/{date}'>{date}</a> ({date_counts[date]})</li>" for date in photo_dates) + "</ul>"
+    return f"""
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -294,8 +290,7 @@ def camera_photos_dates(cam_name):
         <h1>{cam_name} - Photo Dates</h1>
         {dates_html}
     </body>
-</html>
-        """
+</html>"""
 
 # Photo file list for a specific date
 @app.route('/camera/<cam_name>/photos/<date>')
@@ -331,8 +326,7 @@ def camera_photos_files(cam_name, date):
         <h1>{cam_name} - Photos on {date}</h1>
         {files_html}
     </body>
-</html>
-        """
+</html>"""
 
 
 @app.route('/camera/<cam_name>/videos/<date>/<int:file_idx>')
@@ -400,8 +394,7 @@ def camera_video_viewer(cam_name, date, file_idx):
         {photo_link}
         <a href='/camera/{cam_name}/videos/{date}'>Back to file list</a>
     </body>
-</html>
-        """
+</html>"""
 
 
 @app.route('/camera/<cam_name>/photos/<date>/<int:file_idx>')
@@ -469,8 +462,7 @@ def camera_photo_viewer(cam_name, date, file_idx):
         {video_link}
         <a href='/camera/{cam_name}/photos/{date}'>Back to file list</a>
     </body>
-</html>
-        """
+</html>"""
 
 
 @app.route('/media/<cam_name>/<path:filename>')
@@ -497,13 +489,9 @@ def serve_media(cam_name, filename):
             print(f"[MEDIA] File not found: {abs_media_path}")
         return "File not found", 404
 
-    # Serve images and .mp4 directly
-    ext = os.path.splitext(abs_media_path)[1].lower()
-    if ext in ['.jpg', '.jpeg', '.png']:
-        mimetype = 'image/jpeg' if ext in ['.jpg', '.jpeg'] else 'image/png'
-        return flask.send_file(abs_media_path, mimetype=mimetype)
-    elif ext == '.mp4':
-        return flask.send_file(abs_media_path, mimetype='video/mp4')
+    # Serve .jpg and .mp4 directly
+    if abs_media_path.endswith('.jpg') or abs_media_path.endswith('.mp4'):
+        return flask.send_file(abs_media_path)
     # Transcode .mkv to .mp4 on the fly
     elif abs_media_path.endswith('.mkv'):
         import subprocess
