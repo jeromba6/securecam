@@ -11,9 +11,8 @@ RUN mkdir /db && chown appuser:appuser /db
 # Only copy requirements.txt first to keep the 'pip install' layer cached
 COPY source/requirements.txt /app/requirements.txt
 
-# trunk-ignore(hadolint/DL3008)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl=8.14.1-2+deb13u2 ffmpeg && \
+    apt-get install -y --no-install-recommends curl=8.14.1-2+deb13u2 ffmpeg=7:7.1.3-0+deb13u1 && \
     pip install --no-cache-dir -r /app/requirements.txt && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
