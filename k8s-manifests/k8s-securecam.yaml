@@ -46,20 +46,20 @@ spec:
         app: securecam
     spec:
       containers:
-      - name: securecam
-        image: ghcr.io/jeromba6/securecam:latest
-        ports:
-        - containerPort: 5000
-        env:
-        - name: SECURECAM_DIR
-          value: /data/securecam
-        volumeMounts:
-        - name: securecam-data
-          mountPath: /data/securecam
+        - name: securecam
+          image: ghcr.io/jeromba6/securecam:0.5.0
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SECURECAM_DIR
+              value: /data/securecam
+          volumeMounts:
+            - name: securecam-data
+              mountPath: /data/securecam
       volumes:
-      - name: securecam-data
-        persistentVolumeClaim:
-          claimName: securecam-pvc
+        - name: securecam-data
+          persistentVolumeClaim:
+            claimName: securecam-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -72,6 +72,6 @@ spec:
     app: securecam
   ports:
     - protocol: TCP
-      port: 5000
-      targetPort: 5000
+      port: 8000
+      targetPort: 8000
       nodePort: 30000
