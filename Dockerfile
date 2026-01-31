@@ -1,28 +1,33 @@
-# Use official Python image
-FROM python:3.13-slim
+FROM python:3.14-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Set work directory
+# 1. Setup user and structure
+RUN adduser --disabled-password --gecos '' appuser
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+# 2. Setup the DB directory first (so it's owned by appuser)
+RUN mkdir /db && chown appuser:appuser /db
 
-# Install Python dependencies
-COPY pyproject.toml ./
-RUN pip install --upgrade pip && pip install flask pytz
+# 3. Cache dependencies (The most important change)
+# Only copy requirements.txt first to keep the 'pip install' layer cached
+COPY source/requirements.txt /app/requirements.txt
 
-# Copy project files
-COPY main.py ./
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl=8.14.1-2+deb13u2 && \
+    pip install --no-cache-dir -r /app/requirements.txt && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Expose port
-EXPOSE 5000
+# 4. Copy the rest of the source code
+# Since this changes often, it goes at the end
+COPY source /app
 
-# Set default cams_directory (can be overridden)
-ENV SECURECAM_DIR=/data/securecam
+# 5. Runtime configuration
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8000
 
-# Run the Flask app
-CMD ["python", "main.py"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+USER appuser
+
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
