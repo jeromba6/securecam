@@ -43,72 +43,90 @@ app.mount("/html", StaticFiles(directory="html"), name="html")
 # Serve camera data files
 app.mount("/data", StaticFiles(directory=config['cams_directory']), name="data")
 
-
-
-# Simple cache for camera data to avoid frequent disk reads
-camera_data_cache: dict[str, dict] = None
-camera_data_cache_time: float = 0
-CACHE_TTL: int = 300  # Cache time-to-live in seconds
-
-
 def main(config: dict) -> None:
     camera_data = get_all_camera_data(config)
     print(json.dumps(camera_data, indent=4))
-    
 
-def get_all_camera_data(config: dict) -> dict:
+
+
+
+# Sophisticated per-camera cache
+# Structure: { cam_name: { 'mtime': float, 'data': dict } }
+camera_data_cache: dict[str, dict] = {}
+
+
+def get_all_camera_data(config: dict, summary_only: bool = False) -> dict:
     """
-    Collects and caches data for all cameras.
-    Returns a dictionary mapping camera names to their data.
+    Collects data for all cameras. If summary_only is True, returns only
+    camera names and file counts.
     """
-    global camera_data_cache, camera_data_cache_time    
-    now = datetime.datetime.now().timestamp()
-    # Use cached data if still valid
-    if camera_data_cache is not None and now - camera_data_cache_time < CACHE_TTL:
-        return camera_data_cache
-    camera_data = {}
-    # Scan all camera directories
-    for cam in os.listdir(config['cams_directory']):
-        if not cam.startswith(config['cams_prefix']):
-            continue
-        camera_data[cam] = get_camera_data(cam, config)
-    camera_data_cache = camera_data
-    camera_data_cache_time = now
-    return camera_data
+    cameras = [d for d in os.listdir(config['cams_directory']) if d.startswith(config['cams_prefix'])]
+    results = {}
+    
+    for cam in cameras:
+        cam_data = get_camera_data(cam, config)
+        if summary_only:
+            results[cam] = {
+                "photos_count": len(cam_data["photos"]),
+                "videos_count": len(cam_data["videos"])
+            }
+        else:
+            results[cam] = cam_data
+            
+    return results
 
 
 def get_camera_data(cam: str, config: dict) -> dict:
     """
-    Gathers and organizes all data for a specific camera.
-    Returns a dictionary containing video and photo file mappings,
-    grouped and sorted by date.
+    Gathers and organizes data for a specific camera with smart caching.
+    The cache is only invalidated if the camera directory's mtime changes.
     """
     cam_path = os.path.join(config['cams_directory'], cam)
+    if not os.path.isdir(cam_path):
+        return {"videos": {}, "photos": {}}
+
+    # Check directory mtime for change detection
+    current_mtime = os.path.getmtime(cam_path)
+    cached = camera_data_cache.get(cam)
+    
+    if cached and cached['mtime'] == current_mtime:
+        return cached['data']
+
     video_files = {}
     photo_files = {}
+    
     # Walk the camera directory tree
     for root, dirs, files in os.walk(cam_path):
         for file in files:
             full_path = os.path.join(root, file)
-            rel_path = os.path.relpath(full_path, os.path.join(config['cams_directory'], cam)).replace(os.sep, '/')
+            # Use relative path from the camera root for internal mapping
+            rel_path = os.path.relpath(full_path, cam_path).replace(os.sep, '/')
+            
             # Get mtime as UTC, then convert to CET
-            mtime_utc = datetime.datetime.fromtimestamp(os.path.getmtime(full_path), datetime.timezone.utc)
+            mtime_ts = os.path.getmtime(full_path)
+            # Optimization: only compute timezone if needed for indexing, 
+            # but we need it for all to sort correctly later
+            mtime_utc = datetime.datetime.fromtimestamp(mtime_ts, datetime.timezone.utc)
             mtime_cet = mtime_utc.astimezone(CET)
             timestamp = int(mtime_cet.timestamp())
+            
             if is_extension_in_list(file, config['cams_images_extentions']):
                 photo_files[timestamp] = rel_path
-                continue
             elif is_extension_in_list(file, config['cams_videos_extentions']):
                 video_files[timestamp] = rel_path
-                continue
 
-    # # only return the first 10 files
-    # video_files = {k: v for k, v in video_files.items() if k in sorted(video_files.keys())[:10]}
-    # photo_files = {k: v for k, v in photo_files.items() if k in sorted(photo_files.keys())[:10]}    
-    return {
+    data = {
         "videos": video_files,
         "photos": photo_files,
     }
+    
+    # Store in cache
+    camera_data_cache[cam] = {
+        'mtime': current_mtime,
+        'data': data
+    }
+    
+    return data
     
 
 def is_extension_in_list(filename, extensions):
@@ -149,12 +167,24 @@ async def html_root() -> fastapi.responses.RedirectResponse:
 @app.get("/api/cameras")
 async def get_cameras() -> dict:
     """
-    Function to serve HTML pages from the html/ directory.
-
-    :param page_name: Description
-    :type page_name: str
+    Returns a summary of all cameras (names and counts).
     """
-    return get_all_camera_data(config)
+    return get_all_camera_data(config, summary_only=True)
+
+
+@app.get("/api/cameras/{cam}")
+async def get_camera_details(cam: str) -> dict:
+    """
+    Returns full recording data for a specific camera.
+    """
+    if not cam.startswith(config['cams_prefix']):
+        raise fastapi.HTTPException(status_code=400, detail="Invalid camera name")
+        
+    cam_path = os.path.join(config['cams_directory'], cam)
+    if not os.path.exists(cam_path):
+        raise fastapi.HTTPException(status_code=404, detail="Camera not found")
+        
+    return get_camera_data(cam, config)
 
 
 @app.get("/video/{cam}/{file_path:path}")

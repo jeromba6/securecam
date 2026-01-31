@@ -52,19 +52,19 @@ function renderCameras(data) {
 
     cameraNames.forEach(name => {
         const camData = data[name];
-        const videoCount = camData.videos ? Object.keys(camData.videos).length : 0;
-        const photoCount = camData.photos ? Object.keys(camData.photos).length : 0;
+        const photoCount = camData.photos_count || 0;
+        const videoCount = camData.videos_count || 0;
 
         const card = document.createElement('div');
         card.className = 'camera-card';
         card.innerHTML = `
             <h2>${name}</h2>
             <div class="stats">
-                <div class="stat-item clickable" onclick="showDates('${name}', 'photos')">
+                <div class="stat-item clickable" onclick="prepareDates('${name}', 'photos')">
                     <span class="stat-value">${photoCount}</span>
                     <span class="stat-label">Photos</span>
                 </div>
-                <div class="stat-item clickable" onclick="showDates('${name}', 'videos')">
+                <div class="stat-item clickable" onclick="prepareDates('${name}', 'videos')">
                     <span class="stat-value">${videoCount}</span>
                     <span class="stat-label">Videos</span>
                 </div>
@@ -73,6 +73,22 @@ function renderCameras(data) {
         
         dashboard.appendChild(card);
     });
+}
+async function prepareDates(camName, type) {
+    // Check if we need to fetch full camera data
+    if (!cameraData[camName].photos) {
+        try {
+            const response = await fetch(`/api/cameras/${camName}`);
+            if (!response.ok) throw new Error('Failed to fetch camera details');
+            const details = await response.json();
+            cameraData[camName] = { ...cameraData[camName], ...details };
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error loading camera details.');
+            return;
+        }
+    }
+    showDates(camName, type);
 }
 
 function showDates(camName, type) {
@@ -403,15 +419,44 @@ function viewMedia() {
     
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden'; 
+
+    // Prefetch next and previous
+    if (currentTimeIndex < currentTimestamps.length - 1) {
+        const nextTs = currentTimestamps[currentTimeIndex + 1];
+        const nextPath = cameraData[currentCam][currentType][nextTs];
+        const nextUrl = nextPath.toLowerCase().endsWith('.mkv') ? `/video/${currentCam}/${nextPath}` : `/data/${currentCam}/${nextPath}`;
+        if (currentType === 'photos') {
+            new Image().src = nextUrl;
+        } else {
+            const v = document.createElement('video');
+            v.src = nextUrl;
+            v.preload = 'auto';
+        }
+    }
 }
 
 function toggleMediaType() {
     const newType = currentType === 'photos' ? 'videos' : 'photos';
-    showDates(currentCam, newType);
+    prepareDates(currentCam, newType);
 }
 
-function switchCamera(newCamName) {
+async function switchCamera(newCamName) {
     if (newCamName === currentCam) return;
+
+    // Ensure we have data for the new camera
+    if (!cameraData[newCamName].photos) {
+        try {
+            const response = await fetch(`/api/cameras/${newCamName}`);
+            if (!response.ok) throw new Error('Failed to fetch camera details');
+            const details = await response.json();
+            cameraData[newCamName] = { ...cameraData[newCamName], ...details };
+        } catch (error) {
+            console.error('Error:', error);
+            alert(`Error loading data for ${newCamName}`);
+            document.getElementById('camera-select').value = currentCam;
+            return;
+        }
+    }
 
     const ts = parseInt(currentTimestamps[currentTimeIndex]);
     const files = cameraData[newCamName][currentType] || {};
