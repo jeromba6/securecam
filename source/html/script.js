@@ -528,6 +528,13 @@ function nextMedia() {
     }
 }
 
+function prevMedia() {
+    if (currentTimeIndex > 0) {
+        currentTimeIndex--;
+        viewMedia();
+    }
+}
+
 function goHome() {
     currentCam = '';
     currentType = '';
