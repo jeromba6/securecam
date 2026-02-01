@@ -1,7 +1,7 @@
 FROM python:3.14-slim
 
 # 1. Setup user and structure
-RUN adduser --disabled-password --gecos '' appuser
+RUN adduser --uid 10000 --disabled-password --gecos '' appuser
 WORKDIR /app
 
 # 2. Setup the DB directory first (so it's owned by appuser)
@@ -26,7 +26,7 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
 USER appuser
 
