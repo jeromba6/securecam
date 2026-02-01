@@ -56,7 +56,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: securecam
-          image: ghcr.io/jeromba6/securecam:0.7.0
+          image: ghcr.io/jeromba6/securecam:0.8.0
           imagePullPolicy: Always
           securityContext:
             readOnlyRootFilesystem: true
