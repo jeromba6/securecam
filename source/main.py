@@ -152,6 +152,14 @@ def format_cet(ts):
     return dt_cet.strftime("%Y-%m-%d"), dt_cet.strftime("%H:%M:%S")
 
 
+@app.get("/health")
+async def health_check() -> dict:
+    """
+    Health check endpoint for Kubernetes liveness and readiness probes.
+    """
+    return {"status": "ok"}
+
+
 @app.get("/")
 async def root() -> fastapi.responses.RedirectResponse:
     """

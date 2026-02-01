@@ -30,6 +30,7 @@ spec:
       storage: 100Gi
   volumeName: securecam-pv
 ---
+# trunk-ignore(checkov/CKV_K8S_43)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,11 +46,46 @@ spec:
       labels:
         app: securecam
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: securecam
           image: ghcr.io/jeromba6/securecam:0.5.0
+          imagePullPolicy: Always
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           ports:
             - containerPort: 8000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 2
+            periodSeconds: 5
           env:
             - name: SECURECAM_DIR
               value: /data/securecam
@@ -75,3 +111,35 @@ spec:
       port: 8000
       targetPort: 8000
       nodePort: 30000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: limit-securecam-access
+  namespace: securecam
+spec:
+  podSelector:
+    matchLabels:
+      app: securecam
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {} # Allow ingress from all pods in the same namespace
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
