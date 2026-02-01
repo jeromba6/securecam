@@ -156,8 +156,21 @@ def format_cet(ts):
 async def health_check() -> dict:
     """
     Health check endpoint for Kubernetes liveness and readiness probes.
+    Includes diagnostic info about the cameras directory.
     """
-    return {"status": "ok"}
+    cams_dir = config.get("cams_directory", "")
+    exists = os.path.exists(cams_dir)
+    readable = os.access(cams_dir, os.R_OK) if exists else False
+
+    return {
+        "status": "ok" if readable else "degraded",
+        "details": {
+            "cams_directory": cams_dir,
+            "exists": exists,
+            "readable": readable,
+            "files_found": len(os.listdir(cams_dir)) if readable else 0,
+        },
+    }
 
 
 @app.get("/")

@@ -51,6 +51,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 10000
         runAsGroup: 10000
+        fsGroup: 10000
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -72,8 +73,8 @@ spec:
               cpu: 50m
               memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 1
+              memory: 1Gi
           livenessProbe:
             httpGet:
               path: /health
@@ -92,10 +93,14 @@ spec:
           volumeMounts:
             - name: securecam-data
               mountPath: /data/securecam
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: securecam-data
           persistentVolumeClaim:
             claimName: securecam-pvc
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -125,9 +130,7 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - from:
-        - podSelector: {} # Allow ingress from all pods in the same namespace
-      ports:
+    - ports:
         - protocol: TCP
           port: 8000
   egress:
