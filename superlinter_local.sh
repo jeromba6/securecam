@@ -12,7 +12,7 @@ then
 fi
 
 # Extract Superlinter environment variables from the GitHub Actions workflow file
-yq -r '.jobs.lint.steps[] | select(.name == "Run Superlinter").env | del(.GITHUB_TOKEN) | to_entries | .[] | "" + .key + "=" + (.value | @sh)' .github/workflows/pr_checks.yml > superlint_local.env
+yq -r '.jobs.lint.steps[] | select(.name == "Run Superlinter").env | del(.GITHUB_TOKEN) | to_entries | .[] | .key + "=" + (.value | tostring)' .github/workflows/pr_checks.yml > superlint_local.env
 
 # check for -f flag to force fixes
 if [ "$1" = "-f" ]; then
@@ -26,9 +26,11 @@ else
 fi
 
 # Run superlint locally
+# DEFAULT_BRANCH is set to main to match the repository structure
+# Not passing VALIDATE_GIT_COMMITLINT=false to avoid mixing true/false (Super-Linter restriction)
 docker run --rm \
   --env-file superlint_local.env \
   -e RUN_LOCAL=true \
-  -e VALIDATE_GIT_COMMITLINT=false \
+  -e DEFAULT_BRANCH=main \
   -v "$(pwd):/tmp/lint" \
   ghcr.io/super-linter/super-linter:latest | tee superlint_local.log
