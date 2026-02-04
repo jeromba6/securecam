@@ -308,7 +308,7 @@ function showTimes(camName, type, dateString) {
 	}
 }
 
-function showHourTimes(camName, type, dateString, hour) {
+function showHourTimes(camName, _type, dateString, hour) {
 	currentView = "hour";
 	currentShowingDate = dateString;
 	currentShowingHour = hour;
@@ -586,7 +586,7 @@ async function switchCamera(newCamName) {
 	const ts = parseInt(currentTimestamps[currentTimeIndex], 10);
 	const files = cameraData[newCamName][currentType] || {};
 	const timestamps = Object.keys(files)
-		.map((t) => parseInt(t))
+		.map((t) => parseInt(t, 10))
 		.sort((a, b) => a - b);
 
 	if (timestamps.length === 0) {
@@ -618,11 +618,11 @@ async function switchCamera(newCamName) {
 }
 
 function switchToNearest() {
-	const ts = parseInt(currentTimestamps[currentTimeIndex]);
+	const ts = parseInt(currentTimestamps[currentTimeIndex], 10);
 	const otherType = currentType === "photos" ? "videos" : "photos";
 	const otherFiles = cameraData[currentCam][otherType] || {};
 	const otherTimestamps = Object.keys(otherFiles)
-		.map((t) => parseInt(t))
+		.map((t) => parseInt(t, 10))
 		.sort((a, b) => a - b);
 
 	if (otherTimestamps.length === 0) return;
