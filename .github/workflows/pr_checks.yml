@@ -42,10 +42,7 @@ jobs:
           VALIDATE_TRIVY: false
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
           VALIDATE_GIT_COMMITLINT: false
-          VALIDATE_JAVASCRIPT_BIOME: false
-          VALIDATE_CSS_BIOME: false
-          VALIDATE_HTML_BIOME: false
-          VALIDATE_JSON_BIOME: false
+          VALIDATE_BIOME: false
           FIX_HTML_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
           FIX_YAML_PRETTIER: true
