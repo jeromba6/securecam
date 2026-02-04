@@ -106,8 +106,8 @@ p.subtitle {
 	gap: 1rem;
 }
 
-.hidden {
-	display: none !important;
+.hidden.hidden {
+	display: none;
 }
 
 .nav-header {
@@ -150,7 +150,7 @@ p.subtitle {
 .back-btn:hover,
 .home-btn:hover {
 	background: var(--accent-color);
-	border-color: var(--accent-hover);
+	border-color: var(--accent-color);
 	transform: translateY(-2px);
 }
 

@@ -51,14 +51,14 @@ async function manualRefresh() {
 	const savedHour = currentShowingHour;
 
 	// Clear camera details to force full re-fetch
-	for (const cam of Object.keys(cameraData)) {
-		cameraData[cam].photos = undefined;
-		cameraData[cam].videos = undefined;
-	}
+	Object.keys(cameraData).forEach((cam) => {
+		delete cameraData[cam].photos;
+		delete cameraData[cam].videos;
+	});
 	lastSummaryFetch = 0;
-	for (const cam of Object.keys(lastFetchTimes)) {
+	Object.keys(lastFetchTimes).forEach((cam) => {
 		lastFetchTimes[cam] = 0;
-	}
+	});
 
 	await fetchCameras(true);
 
@@ -110,7 +110,7 @@ function renderCameras(data) {
 		return;
 	}
 
-	for (const name of cameraNames) {
+	cameraNames.forEach((name) => {
 		const camData = data[name];
 		const photoCount = camData.photos_count || 0;
 		const videoCount = camData.videos_count || 0;
@@ -132,7 +132,7 @@ function renderCameras(data) {
         `;
 
 		dashboard.appendChild(card);
-	}
+	});
 }
 async function prepareDates(camName, type) {
 	const now = Date.now();
@@ -177,12 +177,10 @@ function showDates(camName, type) {
 
 	// Group by date (Newest first) for the dates list and count items
 	const dateCounts = {};
-	for (const ts of currentTimestamps) {
-		const date = new Date(Number.parseInt(ts) * 1000)
-			.toISOString()
-			.split("T")[0];
+	currentTimestamps.forEach((ts) => {
+		const date = new Date(parseInt(ts, 10) * 1000).toISOString().split("T")[0];
 		dateCounts[date] = (dateCounts[date] || 0) + 1;
-	}
+	});
 
 	currentAvailableDates = Object.keys(dateCounts).sort().reverse();
 	const uniqueDates = currentAvailableDates;
@@ -206,7 +204,7 @@ function showDates(camName, type) {
 		return;
 	}
 
-	for (const date of uniqueDates) {
+	uniqueDates.forEach((date) => {
 		const count = dateCounts[date];
 		const dateCard = document.createElement("div");
 		dateCard.className = "date-card";
@@ -216,7 +214,7 @@ function showDates(camName, type) {
         `;
 		dateCard.onclick = () => showTimes(camName, type, date);
 		datesGrid.appendChild(dateCard);
-	}
+	});
 }
 
 function showTimes(camName, type, dateString) {
@@ -232,7 +230,7 @@ function showTimes(camName, type, dateString) {
 
 	// Filter the global currentTimestamps just for this date's list view
 	const dateTimes = currentTimestamps.filter((ts) => {
-		const date = new Date(Number.parseInt(ts) * 1000);
+		const date = new Date(parseInt(ts, 10) * 1000);
 		return date.toISOString().split("T")[0] === dateString;
 	});
 
@@ -266,17 +264,17 @@ function showTimes(camName, type, dateString) {
 
 		// Group by hour
 		const hourMap = {};
-		for (const ts of dateTimes) {
-			const date = new Date(Number.parseInt(ts) * 1000);
+		dateTimes.forEach((ts) => {
+			const date = new Date(parseInt(ts, 10) * 1000);
 			const hour = date.getHours().toString().padStart(2, "0");
 			if (!hourMap[hour]) hourMap[hour] = 0;
 			hourMap[hour]++;
-		}
+		});
 
 		// Sorted hours
 		currentAvailableHours = Object.keys(hourMap).sort();
 
-		for (const hour of currentAvailableHours) {
+		currentAvailableHours.forEach((hour) => {
 			const hourCard = document.createElement("div");
 			hourCard.className = "date-card";
 			hourCard.innerHTML = `
@@ -285,12 +283,12 @@ function showTimes(camName, type, dateString) {
             `;
 			hourCard.onclick = () => showHourTimes(camName, type, dateString, hour);
 			timesGrid.appendChild(hourCard);
-		}
+		});
 	} else {
 		subTitle.textContent = `Recorded ${type} times`;
 
-		for (const ts of dateTimes) {
-			const date = new Date(Number.parseInt(ts) * 1000);
+		dateTimes.forEach((ts) => {
+			const date = new Date(parseInt(ts, 10) * 1000);
 			const timeStr = date.toLocaleTimeString([], {
 				hour: "2-digit",
 				minute: "2-digit",
@@ -306,7 +304,7 @@ function showTimes(camName, type, dateString) {
 				viewMedia();
 			};
 			timesGrid.appendChild(timeCard);
-		}
+		});
 	}
 }
 
@@ -326,7 +324,7 @@ function showHourTimes(camName, type, dateString, hour) {
 
 	// Filter by date AND hour
 	const hourTimes = currentTimestamps.filter((ts) => {
-		const date = new Date(Number.parseInt(ts) * 1000);
+		const date = new Date(parseInt(ts, 10) * 1000);
 		const dStr = date.toISOString().split("T")[0];
 		const hStr = date.getHours().toString().padStart(2, "0");
 		return dStr === dateString && hStr === hour;
@@ -350,8 +348,8 @@ function showHourTimes(camName, type, dateString, hour) {
 	prevBtn.disabled = !hasPrev;
 	nextBtn.disabled = !hasNext;
 
-	for (const ts of hourTimes) {
-		const date = new Date(Number.parseInt(ts) * 1000);
+	hourTimes.forEach((ts) => {
+		const date = new Date(parseInt(ts, 10) * 1000);
 		const timeStr = date.toLocaleTimeString([], {
 			hour: "2-digit",
 			minute: "2-digit",
@@ -367,7 +365,7 @@ function showHourTimes(camName, type, dateString, hour) {
 			viewMedia();
 		};
 		timesGrid.appendChild(timeCard);
-	}
+	});
 }
 
 function nextHour() {
@@ -386,13 +384,13 @@ function nextHour() {
 			const nextDay = currentAvailableDates[dateIndex - 1];
 			// We need to re-group the next day to find its first hour
 			const dayTimes = currentTimestamps.filter((ts) => {
-				const date = new Date(Number.parseInt(ts) * 1000);
+				const date = new Date(parseInt(ts, 10) * 1000);
 				return date.toISOString().split("T")[0] === nextDay;
 			});
 			const hours = [
 				...new Set(
 					dayTimes.map((ts) =>
-						new Date(Number.parseInt(ts) * 1000)
+						new Date(parseInt(ts, 10) * 1000)
 							.getHours()
 							.toString()
 							.padStart(2, "0"),
@@ -422,13 +420,13 @@ function prevHour() {
 			const prevDayStr = currentAvailableDates[dateIndex + 1];
 			// We need to re-group the prev day to find its last hour
 			const dayTimes = currentTimestamps.filter((ts) => {
-				const date = new Date(Number.parseInt(ts) * 1000);
+				const date = new Date(parseInt(ts, 10) * 1000);
 				return date.toISOString().split("T")[0] === prevDayStr;
 			});
 			const hours = [
 				...new Set(
 					dayTimes.map((ts) =>
-						new Date(Number.parseInt(ts) * 1000)
+						new Date(parseInt(ts, 10) * 1000)
 							.getHours()
 							.toString()
 							.padStart(2, "0"),
@@ -476,7 +474,7 @@ function viewMedia() {
 	const files = cameraData[currentCam][currentType];
 	const relPath = files[ts];
 
-	const date = new Date(Number.parseInt(ts) * 1000);
+	const date = new Date(parseInt(ts, 10) * 1000);
 	const dateStr = date.toISOString().split("T")[0];
 	const timeStr = date.toLocaleTimeString([], {
 		hour: "2-digit",
@@ -511,14 +509,15 @@ function viewMedia() {
 
 	// Populate camera dropdown
 	cameraSelect.innerHTML = "";
-	const sortedCams = Object.keys(cameraData).sort();
-	for (const cam of sortedCams) {
-		const option = document.createElement("option");
-		option.value = cam;
-		option.textContent = cam;
-		option.selected = cam === currentCam;
-		cameraSelect.appendChild(option);
-	}
+	Object.keys(cameraData)
+		.sort()
+		.forEach((cam) => {
+			const option = document.createElement("option");
+			option.value = cam;
+			option.textContent = cam;
+			option.selected = cam === currentCam;
+			cameraSelect.appendChild(option);
+		});
 
 	// Switch button visibility and text
 	const otherType = currentType === "photos" ? "videos" : "photos";
@@ -555,7 +554,7 @@ function viewMedia() {
 	}
 }
 
-function toggleMediaType() {
+function _toggleMediaType() {
 	const newType = currentType === "photos" ? "videos" : "photos";
 	prepareDates(currentCam, newType);
 }
@@ -584,10 +583,10 @@ async function switchCamera(newCamName) {
 		}
 	}
 
-	const ts = Number.parseInt(currentTimestamps[currentTimeIndex]);
+	const ts = parseInt(currentTimestamps[currentTimeIndex], 10);
 	const files = cameraData[newCamName][currentType] || {};
 	const timestamps = Object.keys(files)
-		.map((t) => Number.parseInt(t))
+		.map((t) => parseInt(t))
 		.sort((a, b) => a - b);
 
 	if (timestamps.length === 0) {
@@ -619,11 +618,11 @@ async function switchCamera(newCamName) {
 }
 
 function switchToNearest() {
-	const ts = Number.parseInt(currentTimestamps[currentTimeIndex]);
+	const ts = parseInt(currentTimestamps[currentTimeIndex]);
 	const otherType = currentType === "photos" ? "videos" : "photos";
 	const otherFiles = cameraData[currentCam][otherType] || {};
 	const otherTimestamps = Object.keys(otherFiles)
-		.map((t) => Number.parseInt(t))
+		.map((t) => parseInt(t))
 		.sort((a, b) => a - b);
 
 	if (otherTimestamps.length === 0) return;
