@@ -259,7 +259,7 @@ function showTimes(camName, type, dateString) {
 
 	timesGrid.innerHTML = "";
 
-	if (dateTimes.length > 24) {
+	if (dateTimes.length > 50) {
 		subTitle.textContent = `High activity: ${dateTimes.length} ${type} grouped by hour`;
 
 		// Group by hour
