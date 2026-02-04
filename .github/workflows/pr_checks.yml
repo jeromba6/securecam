@@ -42,10 +42,10 @@ jobs:
           VALIDATE_TRIVY: false
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
           VALIDATE_GIT_COMMITLINT: false
-          VALIDATE_BIOME: false
-          FIX_HTML_PRETTIER: true
-          FIX_MARKDOWN_PRETTIER: true
-          FIX_YAML_PRETTIER: true
+          VALIDATE_BIOME: true
+          VALIDATE_PRETTIER: false
+          VALIDATE_ESLINT: false
+          VALIDATE_STYLELINT: false
 
   # ------------------------------------------------------------------
   # JOB 2: MALWARE SCAN (Source Code)
