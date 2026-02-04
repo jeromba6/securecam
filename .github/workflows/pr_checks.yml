@@ -34,8 +34,9 @@ jobs:
         uses: super-linter/super-linter@v8.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: false
-          VALIDATE_BIOME: true
+          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_BIOME_LINT: true
+          VALIDATE_BIOME_FORMAT: true
           VALIDATE_YAML: true
           VALIDATE_BASH: true
           VALIDATE_MARKDOWN: true

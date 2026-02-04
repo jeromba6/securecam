@@ -17,11 +17,7 @@
 }
 
 body {
-	font-family:
-		"Inter",
-		system-ui,
-		-apple-system,
-		sans-serif;
+	font-family: "Inter", system-ui, -apple-system, sans-serif;
 	background-color: var(--bg-color);
 	background-image:
 		radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
